@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+
+tests/*.log
+tests/*-result.*
+tests/headless-result.json
+tests/fixtures/vulnerable
+tests/fixtures/vulnerable.i64
+tests/fixtures/vulnerable.dSYM/
+
+# Exceeds GitHub's regular Git per-file size limit; keep the corpus locally.
+test_problem/AWDP-PWN-PHP.zip

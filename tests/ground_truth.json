@@ -1,0 +1,193 @@
+{
+  "schema_version": 1,
+  "scope": "All challenge executables under test_problem except PHP; loaders and bundled libraries are not separate challenge cases.",
+  "method": "Independent manual review of decompiled pseudocode, normalized Ctree statements, call sites, control flow, stack offsets, and caller constraints. Existing plugin findings were not used as labels.",
+  "unit": {
+    "root": "One independently triggerable vulnerability root. Repeated equivalent call sites are grouped.",
+    "site": "A concrete instruction/call site belonging to a root.",
+    "excluded": "Pure denial of service, resource leaks, and weak hardening without a dependable pwn primitive are excluded."
+  },
+  "cases": [
+    {
+      "name": "chr",
+      "roots": [
+        {
+          "id": "chr-iconv-module-overflow",
+          "class": "heap-overflow",
+          "function": "sub_18B9",
+          "sink_eas": ["0x1a1e"],
+          "evidence": "Attacker bytes reach the bundled ISO-2022-CN-EXT converter; its escape-sequence emission can write past the supplied output end."
+        },
+        {
+          "id": "chr-unterminated-conversion-copy",
+          "class": "oob-read-and-heap-overflow",
+          "function": "sub_18B9",
+          "sink_eas": ["0x1a5a", "0x1a89"],
+          "evidence": "iconv does not append a terminator. strlen can read past the conversion buffer, and the resulting length is copied into the smaller original chunk."
+        }
+      ]
+    },
+    {
+      "name": "anime",
+      "roots": [
+        {
+          "id": "anime-format-string",
+          "class": "format-string",
+          "function": "main",
+          "sink_eas": ["0x15cb"],
+          "evidence": "Decrypted attacker-controlled plaintext is passed directly as printf's format argument."
+        }
+      ]
+    },
+    {
+      "name": "ezheap",
+      "roots": [
+        {
+          "id": "ezheap-new-source-overread",
+          "class": "heap-oob-read",
+          "function": "sub_142C",
+          "sink_eas": ["0x151d"],
+          "evidence": "The JSON length field controls memcpy independently of the actual message-string allocation length."
+        },
+        {
+          "id": "ezheap-dangling-slot",
+          "class": "uaf-and-double-free",
+          "function": "sub_1573",
+          "sink_eas": ["0x15d4"],
+          "evidence": "The global chunk pointer and size remain live after free and can be viewed, modified, or freed again."
+        },
+        {
+          "id": "ezheap-modify-overflow",
+          "class": "heap-overflow-and-oob-read",
+          "function": "sub_164F",
+          "sink_eas": ["0x16c4"],
+          "evidence": "The modify length is not checked against either the stored chunk size or the source message length."
+        }
+      ]
+    },
+    {
+      "name": "embedded_httpd",
+      "roots": [
+        {
+          "id": "httpd-query-path-unterminated",
+          "class": "stack-oob-read",
+          "function": "vohttpd_http_file",
+          "sink_eas": ["0x401760"],
+          "evidence": "The query-delimited path is copied with strncpy without writing a terminator, then consumed by string/file APIs."
+        },
+        {
+          "id": "httpd-content-length-overflow",
+          "class": "heap-overflow",
+          "function": "vohttpd_loop",
+          "sink_eas": ["0x40420c"],
+          "evidence": "Parsed Content-Length controls the second recv into the fixed per-socket 4096-byte request storage without a capacity check."
+        }
+      ]
+    },
+    {
+      "name": "broken_manager",
+      "roots": [
+        {
+          "id": "broken-manager-custom-free-uaf",
+          "class": "use-after-free",
+          "function": "main",
+          "sink_eas": ["0x1fea", "0x2038", "0x2086"],
+          "evidence": "Each site dereferences chunk metadata immediately after sub_177F releases the freshly allocated chunk."
+        },
+        {
+          "id": "broken-manager-retained-custom-free-slot",
+          "class": "uaf-and-double-free",
+          "function": "sub_1C22",
+          "sink_eas": ["0x1cbe"],
+          "evidence": "The delete action releases unk_50C0[index] through sub_177F but clears only the separate size array; show and repeated delete retain access to the dangling pointer slot."
+        }
+      ]
+    },
+    {
+      "name": "catchme",
+      "roots": [
+        {
+          "id": "catchme-dangling-slot",
+          "class": "uaf-and-double-free",
+          "function": "sub_D78",
+          "sink_eas": ["0xe20"],
+          "evidence": "free leaves qword_202060[index] non-null, enabling inspect, engrave, and repeated release on freed storage."
+        }
+      ]
+    },
+    {
+      "name": "easy_rw",
+      "roots": [
+        {
+          "id": "easy-rw-failed-replacement-dangling-slot",
+          "class": "uaf-and-double-free",
+          "function": "sub_1869",
+          "sink_eas": ["0x1915"],
+          "evidence": "An existing large slot is freed before replacement allocation; a negative requested size forces allocation failure and leaves the old global pointer and size intact."
+        },
+        {
+          "id": "easy-rw-zero-size-underflow",
+          "class": "heap-overflow",
+          "function": "sub_1869",
+          "sink_eas": ["0x197a"],
+          "evidence": "size zero is accepted; malloc(0) can return non-null and n becomes a1-1, i.e. SIZE_MAX, before memcpy."
+        },
+        {
+          "id": "easy-rw-uninitialized-send-length",
+          "class": "oob-read",
+          "function": "sub_1D86",
+          "sink_eas": ["0x25a6"],
+          "evidence": "The show response passes an uninitialized EDX-derived length to send instead of the length recorded by sub_1C26."
+        }
+      ]
+    },
+    {
+      "name": "easy_rw_proxy",
+      "roots": [
+        {
+          "id": "proxy-auth-unterminated-string",
+          "class": "heap-oob-read",
+          "function": "sub_1ACC",
+          "sink_eas": ["0x1b63"],
+          "evidence": "The decrypted malloc buffer has exactly the network-supplied length and no appended NUL before strcmp."
+        }
+      ]
+    },
+    {
+      "name": "minidb",
+      "roots": [
+        {
+          "id": "minidb-refcount-bypass",
+          "class": "use-after-free",
+          "function": "sub_1468",
+          "sink_eas": ["0x16f4"],
+          "evidence": "A repeated SET in the same transaction raw-frees a refcounted value; CLONE aliases can retain and later use that allocation."
+        }
+      ]
+    },
+    {
+      "name": "darkheap",
+      "roots": [
+        {
+          "id": "darkheap-dangling-slot",
+          "class": "uaf-and-double-free",
+          "function": "sub_1570",
+          "sink_eas": ["0x15a6"],
+          "evidence": "Delete frees the global slot without clearing its pointer or size, so Edit and Delete remain available."
+        }
+      ]
+    },
+    {
+      "name": "loginsystem",
+      "roots": [
+        {
+          "id": "loginsystem-unbounded-credential-copy",
+          "class": "stack-overflow",
+          "function": "sub_405430",
+          "sink_eas": ["0x405dbe", "0x405dd6"],
+          "evidence": "MessagePack-controlled username and password lengths are copied into two 256-byte stack arrays without upper bounds."
+        }
+      ]
+    }
+  ]
+}

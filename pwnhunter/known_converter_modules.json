@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "modules": [
+    {
+      "converter": "ISO-2022-CN-EXT",
+      "filenames": ["ISO-2022-CN-EXT.so"],
+      "size": 59600,
+      "sha256": "de55f6a6b48cd92fb626e6bcaef0febf34f9f7fed1ba91e68dd5a9131bebaca5",
+      "build_id": "05049860b9df033f417100eb4ee95b32fb45d042",
+      "issue": "CVE-2024-2961",
+      "distribution": "Ubuntu",
+      "version": "2.39-0ubuntu8",
+      "fixed_version": "2.39-0ubuntu8.1",
+      "markers": [
+        "ISO-2022-CN-EXT//",
+        "from_iso2022cn_ext_loop",
+        "to_iso2022cn_ext_loop_single"
+      ],
+      "references": [
+        "https://sourceware.org/git/?p=glibc.git;a=commit;h=f9dc609e06b1136bb0408be9605ce7973a767ada",
+        "https://ubuntu.com/security/CVE-2024-2961"
+      ]
+    }
+  ]
+}
